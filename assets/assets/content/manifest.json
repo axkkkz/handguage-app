@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "contentVersion": 1,
+  "languages": [
+    {
+      "code": "asl",
+      "nameTh": "ASL (อเมริกัน)",
+      "nameEn": "ASL (American)",
+      "file": "asl.json"
+    },
+    {
+      "code": "tsl",
+      "nameTh": "TSL (ไทย)",
+      "nameEn": "TSL (Thai)",
+      "file": "tsl.json"
+    }
+  ]
+}

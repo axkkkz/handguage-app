@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "version": 1,
+  "code": "tsl",
+  "sources": {},
+  "categories": [
+    {"id":"greetings","th":"ทักทาย","en":"Greetings","icon":"waving_hand"},
+    {"id":"numbers","th":"ตัวเลข","en":"Numbers","icon":"numbers"},
+    {"id":"family","th":"ครอบครัว","en":"Family","icon":"family"},
+    {"id":"people","th":"ผู้คน","en":"People","icon":"people"},
+    {"id":"food","th":"อาหารและเครื่องดื่ม","en":"Food & drink","icon":"food"},
+    {"id":"feelings","th":"ความรู้สึก","en":"Feelings","icon":"feelings"},
+    {"id":"actions","th":"การกระทำ","en":"Actions","icon":"actions"}
+  ],
+  "units": [
+    {"id":"basics","th":"พื้นฐาน","en":"Basics","signs":["hello","thank_you","sorry","goodbye","help"]},
+    {"id":"numbers1","th":"ตัวเลข 1–5","en":"Numbers 1–5","signs":["one","two","three"]},
+    {"id":"family1","th":"ครอบครัว 1","en":"Family 1","signs":["mother","father"]},
+    {"id":"people1","th":"ผู้คน 1","en":"People 1","signs":["friend"]},
+    {"id":"food1","th":"อาหาร 1","en":"Food 1","signs":["eat","drink","water","rice"]},
+    {"id":"feelings1","th":"ความรู้สึก 1","en":"Feelings 1","signs":["happy","sad","love"]},
+    {"id":"actions1","th":"การกระทำ 1","en":"Actions 1","signs":["go"]}
+  ],
+  "signs": [
+    {"id":"hello","word":"hello","thai":"สวัสดี","category":"greetings"},
+    {"id":"thank_you","word":"thank you","thai":"ขอบคุณ","category":"greetings"},
+    {"id":"sorry","word":"sorry","thai":"ขอโทษ","category":"greetings"},
+    {"id":"goodbye","word":"goodbye","thai":"ลาก่อน","category":"greetings"},
+    {"id":"help","word":"help","thai":"ช่วย","category":"greetings"},
+    {"id":"one","word":"one","thai":"หนึ่ง","category":"numbers"},
+    {"id":"two","word":"two","thai":"สอง","category":"numbers"},
+    {"id":"three","word":"three","thai":"สาม","category":"numbers"},
+    {"id":"mother","word":"mother","thai":"แม่","category":"family"},
+    {"id":"father","word":"father","thai":"พ่อ","category":"family"},
+    {"id":"friend","word":"friend","thai":"เพื่อน","category":"people"},
+    {"id":"eat","word":"eat","thai":"กิน","category":"food"},
+    {"id":"drink","word":"drink","thai":"ดื่ม","category":"food"},
+    {"id":"water","word":"water","thai":"น้ำ","category":"food"},
+    {"id":"rice","word":"rice","thai":"ข้าว","category":"food"},
+    {"id":"happy","word":"happy","thai":"มีความสุข","category":"feelings"},
+    {"id":"sad","word":"sad","thai":"เศร้า","category":"feelings"},
+    {"id":"love","word":"love","thai":"รัก","category":"feelings"},
+    {"id":"go","word":"go","thai":"ไป","category":"actions"}
+  ]
+}
