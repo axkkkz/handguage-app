@@ -6,6 +6,7 @@
 // ใช้จาก lib/recognition/device_hand_source_web.dart:
 //   window.hgHandTracker.start(videoElement, onFrame)  -> Promise
 //   window.hgHandTracker.stop()
+//   window.hgHandTracker.stats()                       -> ข้อความสำหรับโหมดดีบัก
 // onFrame ได้ Array 42 ค่า [x0, y0, x1, y1, ...] หน่วยพิกเซลของวิดีโอ หรือ null ถ้าไม่เห็นมือ
 (function () {
   const VERSION = "0.10.14";
@@ -14,10 +15,18 @@
   const MODEL =
     "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
 
+  // จับมือไม่เกินประมาณ 12 ครั้ง/วินาที: การจับมือรันบนเธรดเดียวกับหน้าจอ
+  // ถ้าทำทุกเฟรมที่จอวาด (60 ครั้ง/วินาที) มือถือจะกระตุกและร้อน ส่วนตัวจำท่าต้องการแค่
+  // เฟรมนิ่งต่อเนื่องไม่กี่เฟรม
+  const MIN_INTERVAL_MS = 80;
+
   let landmarker = null;
   let loading = null;
+  let delegateUsed = "";
   let running = false;
   let frameRequest = 0;
+  let avgDetectMs = 0;
+  let framesPerSecond = 0;
 
   async function create(vision, delegate) {
     const fileset = await vision.FilesetResolver.forVisionTasks(WASM);
@@ -35,9 +44,11 @@
         const vision = await import(BUNDLE);
         try {
           landmarker = await create(vision, "GPU");
+          delegateUsed = "GPU";
         } catch (_) {
           // บางเครื่องใช้ GPU ไม่ได้: ถอยไปใช้ CPU
           landmarker = await create(vision, "CPU");
+          delegateUsed = "CPU";
         }
         return landmarker;
       })().catch((e) => {
@@ -64,24 +75,68 @@
     return out;
   }
 
+  function waitForFrame(video) {
+    if (video.readyState >= 2) return Promise.resolve();
+    return new Promise((resolve) => {
+      const done = () => {
+        video.removeEventListener("loadeddata", done);
+        resolve();
+      };
+      video.addEventListener("loadeddata", done);
+      setTimeout(done, 3000); // ไม่รอเกินนี้ ลูปหลักจะข้ามเฟรมที่ยังไม่พร้อมเอง
+    });
+  }
+
   window.hgHandTracker = {
     ensureLoaded,
     detect,
 
+    /** เช่น "GPU 28 ms 11/s" = ตัวเร่ง, เวลาจับมือเฉลี่ยต่อเฟรม, จำนวนครั้งต่อวินาที */
+    stats() {
+      if (!landmarker) return "";
+      return `${delegateUsed} ${Math.round(avgDetectMs)} ms ${framesPerSecond}/s`;
+    },
+
     async start(video, onFrame) {
       await ensureLoaded();
+      // การจับมือครั้งแรกช้ากว่าปกติมาก (เตรียมตัวเร่ง) ทำให้เสร็จตรงนี้ ระหว่างที่หน้าจอ
+      // ยังแสดงสถานะกำลังเปิดกล้อง ไม่ให้ไปค้างตอนผู้ใช้เริ่มทำท่าแล้ว
+      await waitForFrame(video);
+      try {
+        detect(video, performance.now());
+      } catch (_) {}
+
       running = true;
+      avgDetectMs = 0;
       let lastTime = -1;
+      let nextAt = 0;
+      let counted = 0;
+      let countStart = performance.now();
       const loop = () => {
         if (!running) return;
-        // ประมวลผลเฉพาะเมื่อมีเฟรมใหม่
-        if (video.readyState >= 2 && video.currentTime !== lastTime) {
+        const now = performance.now();
+        // ประมวลผลเฉพาะเมื่อถึงเวลาและมีเฟรมใหม่
+        if (now >= nextAt && video.readyState >= 2 && video.currentTime !== lastTime) {
           lastTime = video.currentTime;
+          let points = null;
           try {
-            onFrame(detect(video, performance.now()));
+            points = detect(video, now);
           } catch (_) {
             // เฟรมเดียวพลาดไม่เป็นไร
           }
+          const took = performance.now() - now;
+          avgDetectMs = avgDetectMs ? avgDetectMs * 0.8 + took * 0.2 : took;
+          // เครื่องช้า: เว้นให้หน้าจอได้ทำงานอย่างน้อยเท่ากับเวลาที่ใช้จับมือ
+          nextAt = now + Math.max(MIN_INTERVAL_MS, took * 2);
+          counted++;
+          if (now - countStart >= 1000) {
+            framesPerSecond = Math.round((counted * 1000) / (now - countStart));
+            counted = 0;
+            countStart = now;
+          }
+          try {
+            onFrame(points);
+          } catch (_) {}
         }
         frameRequest = requestAnimationFrame(loop);
       };
