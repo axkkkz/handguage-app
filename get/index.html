@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- เดโมไม่เชิงพาณิชย์: ไม่ให้เสิร์ชเอนจินเก็บหน้า -->
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#3A4DE0">
+  <title>Handguage: เรียนภาษามือ</title>
+  <link rel="icon" type="image/png" href="../favicon.png">
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+  <style>
+    :root { --primary: #3A4DE0; --primary-dark: #2A3AB8; --ink: #1B2140; --muted: #5A6180; --ground: #F3F5FB; --line: #DCE0F0; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans Thai", Roboto, sans-serif; background: var(--ground); color: var(--ink); line-height: 1.55; }
+    main { max-width: 520px; margin: 0 auto; padding: 32px 20px 48px; }
+    header { text-align: center; }
+    header img { width: 96px; height: 96px; border-radius: 24px; }
+    h1 { margin: 16px 0 4px; font-size: 32px; letter-spacing: -0.5px; color: var(--primary); }
+    .tagline { margin: 0 0 24px; color: var(--muted); }
+    .card { background: #fff; border-radius: 24px; padding: 20px; margin-top: 16px; }
+    .card h2 { margin: 0 0 6px; font-size: 18px; }
+    .card p { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+    .button { display: block; text-align: center; text-decoration: none; font-weight: 700; font-size: 16px; padding: 15px 18px; border-radius: 18px; min-height: 48px; }
+    .button.primary { background: var(--primary); color: #fff; }
+    .button.primary:hover { background: var(--primary-dark); }
+    .button.secondary { background: #fff; color: var(--primary-dark); border: 2px solid var(--line); }
+    .button:focus-visible { outline: 3px solid #F5A623; outline-offset: 2px; }
+    .steps { margin: 12px 0 0; padding-left: 20px; color: var(--muted); font-size: 14px; }
+    #qr { display: flex; justify-content: center; margin: 8px 0 12px; }
+    #qr canvas { width: 220px; height: 220px; image-rendering: pixelated; border-radius: 12px; }
+    .url { word-break: break-all; font-size: 13px; color: var(--muted); text-align: center; margin: 0 0 12px; }
+    .notice { font-size: 13px; color: var(--muted); }
+    .notice li { margin-bottom: 6px; }
+    .en { display: block; font-size: 13px; color: var(--muted); font-weight: 400; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="../icons/Icon-192.png" alt="">
+    <h1>Handguage</h1>
+    <p class="tagline">เรียนภาษามือ ASL ด้วยวิดีโอ แบบทดสอบ ภารกิจรายวัน และกล้องจำท่ามือ
+      <span class="en">Learn ASL with videos, quizzes, daily quests and camera recognition</span></p>
+  </header>
+
+  <section class="card">
+    <h2>ใช้ได้ทันทีในเบราว์เซอร์</h2>
+    <p>ใช้ได้ทั้ง iPhone และ Android ไม่ต้องติดตั้ง ต้องมีอินเทอร์เน็ต</p>
+    <a class="button primary" href="../">เปิดเว็บแอป <span class="en" style="color:#E3E8FF">Open the web app</span></a>
+    <ol class="steps">
+      <li>อยากได้ไอคอนบนหน้าจอ: iPhone กดปุ่มแชร์ใน Safari แล้วเลือก "เพิ่มไปยังหน้าจอโฮม"</li>
+      <li>Android: เมนูของ Chrome แล้วเลือก "เพิ่มลงในหน้าจอหลัก"</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>แอป Android</h2>
+    <p>มีโหมดออฟไลน์ และกล้องจับมือเร็วกว่าในเบราว์เซอร์ ไฟล์ประมาณ <span id="apk-size">54</span> MB</p>
+    <a class="button secondary" href="https://github.com/axkkkz/handguage-app/releases/latest/download/handguage-arm64-v8a.apk">ดาวน์โหลด APK <span class="en">Download the Android app</span></a>
+    <ol class="steps">
+      <li>เปิดไฟล์ที่ดาวน์โหลด แล้วอนุญาต "ติดตั้งแอปที่ไม่รู้จัก" เมื่อเครื่องถาม</li>
+      <li>เครื่องรุ่นเก่ามาก (32 บิต) ใช้ไฟล์
+        <a href="https://github.com/axkkkz/handguage-app/releases/latest/download/handguage-armeabi-v7a.apk">นี้แทน</a></li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>ส่งต่อให้เพื่อน</h2>
+    <p>สแกนเพื่อเปิดหน้านี้</p>
+    <div id="qr" role="img" aria-label="QR code ของหน้านี้"></div>
+    <p class="url" id="page-url"></p>
+    <a class="button secondary" id="save-qr" href="#" download="handguage-qr.png" hidden>บันทึกรูป QR <span class="en">Save the QR image</span></a>
+  </section>
+
+  <section class="card notice">
+    <h2>ควรรู้ก่อนใช้</h2>
+    <ul>
+      <li>นี่คือเดโมที่ไม่ใช่เชิงพาณิชย์ วิดีโอท่ามือมาจากชุดข้อมูลวิจัย WLASL</li>
+      <li>คำอธิบายวิธีทำท่าเขียนโดยผู้พัฒนา ยังไม่ได้ตรวจโดยผู้ใช้ภาษามือ</li>
+      <li>กล้องจำท่ามือเป็นฟีเจอร์ทดลอง ภาพจากกล้องประมวลผลในเครื่องของคุณ ไม่ถูกบันทึกหรือส่งออก</li>
+      <li>ความคืบหน้าเก็บในเครื่องหรือเบราว์เซอร์ของคุณเท่านั้น ไม่มีบัญชีผู้ใช้</li>
+    </ul>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+  // QR ของหน้านี้เอง (ตัดส่วน ?query และ #hash ออก) วาดลง canvas เพื่อให้บันทึกเป็นรูปได้
+  (function () {
+    var url = location.origin + location.pathname;
+    document.getElementById('page-url').textContent = url;
+    if (typeof qrcode !== 'function') return; // โหลดไลบรารีไม่ได้: เหลือแค่ลิงก์ข้อความ
+    var qr = qrcode(0, 'M');
+    qr.addData(url);
+    qr.make();
+    var count = qr.getModuleCount();
+    var cell = 8, margin = 4;
+    var size = (count + margin * 2) * cell;
+    var canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    var g = canvas.getContext('2d');
+    g.fillStyle = '#fff';
+    g.fillRect(0, 0, size, size);
+    g.fillStyle = '#1B2140';
+    for (var r = 0; r < count; r++) {
+      for (var c = 0; c < count; c++) {
+        if (qr.isDark(r, c)) g.fillRect((c + margin) * cell, (r + margin) * cell, cell, cell);
+      }
+    }
+    document.getElementById('qr').appendChild(canvas);
+    var save = document.getElementById('save-qr');
+    save.href = canvas.toDataURL('image/png');
+    save.hidden = false;
+  })();
+</script>
+</body>
+</html>
