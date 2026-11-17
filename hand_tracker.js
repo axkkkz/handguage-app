@@ -59,9 +59,17 @@
     return loading;
   }
 
+  let lastTimestamp = 0;
+
   /** จับจุดมือจากเฟรมปัจจุบันของ [video] คืน Array 42 ค่า หรือ null */
   function detect(video, timestampMs) {
-    const result = landmarker.detectForVideo(video, timestampMs);
+    // ภาพยังไม่มีขนาด (กล้องเพิ่งเปิด/สลับ): ข้าม ถ้าส่งเข้าไป MediaPipe จะ error
+    // และหลังจากนั้นทุกเฟรมจะ error ตาม (ตัวจับมือพังทั้งตัว)
+    if (!video.videoWidth || !video.videoHeight) return null;
+    // โหมด VIDEO ต้องการเวลาที่เพิ่มขึ้นเสมอ
+    const ts = Math.max(timestampMs, lastTimestamp + 1);
+    lastTimestamp = ts;
+    const result = landmarker.detectForVideo(video, ts);
     const hand = result.landmarks && result.landmarks[0];
     if (!hand || hand.length !== 21) return null;
     // ค่าที่ได้เป็นสัดส่วน 0..1 ของภาพ ต้องคูณขนาดจริง ไม่งั้นรูปมือเพี้ยนตามอัตราส่วนภาพ
@@ -74,6 +82,23 @@
     }
     return out;
   }
+
+  let failures = 0;
+
+  /** ทิ้งตัวจับมือที่พังแล้วสร้างใหม่ ระหว่างสร้าง ลูปหลักรอ (ไม่จับมือ) */
+  function rebuild() {
+    const broken = landmarker;
+    landmarker = null;
+    loading = null;
+    lastTimestamp = 0;
+    try {
+      broken && broken.close();
+    } catch (_) {}
+    rebuilds++;
+    ensureLoaded().catch(() => {});
+  }
+
+  let rebuilds = 0;
 
   function waitForFrame(video) {
     if (video.readyState >= 2) return Promise.resolve();
@@ -93,8 +118,9 @@
 
     /** เช่น "GPU 28 ms 11/s" = ตัวเร่ง, เวลาจับมือเฉลี่ยต่อเฟรม, จำนวนครั้งต่อวินาที */
     stats() {
-      if (!landmarker) return "";
-      return `${delegateUsed} ${Math.round(avgDetectMs)} ms ${framesPerSecond}/s`;
+      if (!landmarker) return rebuilds ? `rebuilding (${rebuilds})` : "";
+      const r = rebuilds ? ` rebuilt ${rebuilds}` : "";
+      return `${delegateUsed} ${Math.round(avgDetectMs)} ms ${framesPerSecond}/s${r}`;
     },
 
     async start(video, onFrame) {
@@ -115,14 +141,21 @@
       const loop = () => {
         if (!running) return;
         const now = performance.now();
-        // ประมวลผลเฉพาะเมื่อถึงเวลาและมีเฟรมใหม่
-        if (now >= nextAt && video.readyState >= 2 && video.currentTime !== lastTime) {
+        // ประมวลผลเฉพาะเมื่อถึงเวลา มีเฟรมใหม่ และตัวจับมือพร้อม (อาจกำลังสร้างใหม่)
+        if (landmarker && now >= nextAt && video.readyState >= 2 && video.currentTime !== lastTime) {
           lastTime = video.currentTime;
           let points = null;
           try {
             points = detect(video, now);
+            failures = 0;
           } catch (_) {
-            // เฟรมเดียวพลาดไม่เป็นไร
+            // เฟรมเดียวพลาดไม่เป็นไร แต่ถ้าพลาดติดกัน แปลว่าตัวจับมือพังทั้งตัว
+            // (MediaPipe ไม่ฟื้นเอง) จึงทิ้งแล้วสร้างใหม่
+            failures++;
+            if (failures >= 3) {
+              failures = 0;
+              rebuild();
+            }
           }
           const took = performance.now() - now;
           avgDetectMs = avgDetectMs ? avgDetectMs * 0.8 + took * 0.2 : took;
