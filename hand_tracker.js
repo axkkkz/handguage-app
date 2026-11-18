@@ -7,7 +7,7 @@
 //   window.hgHandTracker.start(videoElement, onFrame)  -> Promise
 //   window.hgHandTracker.stop()
 //   window.hgHandTracker.stats()                       -> ข้อความสำหรับโหมดดีบัก
-// onFrame ได้ Array 42 ค่า [x0, y0, x1, y1, ...] หน่วยพิกเซลของวิดีโอ หรือ null ถ้าไม่เห็นมือ
+// onFrame ได้ Array 42 ค่าต่อมือ [x0, y0, x1, y1, ...] (สองมือ = 84) หน่วยพิกเซลของวิดีโอ หรือ null ถ้าไม่เห็นมือ
 (function () {
   const VERSION = "0.10.14";
   const BUNDLE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${VERSION}/vision_bundle.mjs`;
@@ -33,7 +33,7 @@
     return vision.HandLandmarker.createFromOptions(fileset, {
       baseOptions: { modelAssetPath: MODEL, delegate },
       runningMode: "VIDEO",
-      numHands: 1,
+      numHands: 2, // ท่าสองมือ (ตัวจำท่านิ่งใช้มือหลักมือเดียว)
     });
   }
 
@@ -61,7 +61,7 @@
 
   let lastTimestamp = 0;
 
-  /** จับจุดมือจากเฟรมปัจจุบันของ [video] คืน Array 42 ค่า หรือ null */
+  /** จับจุดมือจากเฟรมปัจจุบันของ [video] คืน Array 42 ค่าต่อมือ (สองมือ = 84) หรือ null */
   function detect(video, timestampMs) {
     // ภาพยังไม่มีขนาด (กล้องเพิ่งเปิด/สลับ): ข้าม ถ้าส่งเข้าไป MediaPipe จะ error
     // และหลังจากนั้นทุกเฟรมจะ error ตาม (ตัวจับมือพังทั้งตัว)
@@ -70,15 +70,14 @@
     const ts = Math.max(timestampMs, lastTimestamp + 1);
     lastTimestamp = ts;
     const result = landmarker.detectForVideo(video, ts);
-    const hand = result.landmarks && result.landmarks[0];
-    if (!hand || hand.length !== 21) return null;
+    const hands = (result.landmarks || []).filter((hand) => hand && hand.length === 21);
+    if (!hands.length) return null;
     // ค่าที่ได้เป็นสัดส่วน 0..1 ของภาพ ต้องคูณขนาดจริง ไม่งั้นรูปมือเพี้ยนตามอัตราส่วนภาพ
     const w = video.videoWidth;
     const h = video.videoHeight;
-    const out = new Array(42);
-    for (let i = 0; i < 21; i++) {
-      out[2 * i] = hand[i].x * w;
-      out[2 * i + 1] = hand[i].y * h;
+    const out = [];
+    for (const hand of hands.slice(0, 2)) {
+      for (let i = 0; i < 21; i++) out.push(hand[i].x * w, hand[i].y * h);
     }
     return out;
   }
