@@ -4,8 +4,8 @@
 // ไลบรารีและโมเดลโหลดจาก CDN ตอนเปิดกล้องครั้งแรก (ไม่โหลดตอนเปิดแอพ)
 //
 // ใช้จาก lib/recognition/device_hand_source_web.dart:
-//   window.hgHandTracker.start(videoElement, onFrame)  -> Promise
-//   window.hgHandTracker.stop()
+//   window.hgHandTracker.start(videoElement, onFrame)  -> Promise<เลขรอบ>
+//   window.hgHandTracker.stop(เลขรอบ)  หยุดเฉพาะรอบนั้น (ไม่ส่ง = หยุดทุกรอบ)
 //   window.hgHandTracker.stats()                       -> ข้อความสำหรับโหมดดีบัก
 // onFrame ได้ Array 42 ค่าต่อมือ [x0, y0, x1, y1, ...] (สองมือ = 84) หน่วยพิกเซลของวิดีโอ หรือ null ถ้าไม่เห็นมือ
 (function () {
@@ -23,7 +23,8 @@
   let landmarker = null;
   let loading = null;
   let delegateUsed = "";
-  let running = false;
+  // เลขรอบปัจจุบัน: หน้ากล้องเก่าที่ปิดช้าเรียก stop ด้วยเลขรอบเก่า จะไม่ไปหยุดรอบของหน้าใหม่
+  let session = 0;
   let frameRequest = 0;
   let avgDetectMs = 0;
   let framesPerSecond = 0;
@@ -123,6 +124,8 @@
     },
 
     async start(video, onFrame) {
+      const my = ++session;
+      cancelAnimationFrame(frameRequest);
       await ensureLoaded();
       // การจับมือครั้งแรกช้ากว่าปกติมาก (เตรียมตัวเร่ง) ทำให้เสร็จตรงนี้ ระหว่างที่หน้าจอ
       // ยังแสดงสถานะกำลังเปิดกล้อง ไม่ให้ไปค้างตอนผู้ใช้เริ่มทำท่าแล้ว
@@ -131,14 +134,14 @@
         detect(video, performance.now());
       } catch (_) {}
 
-      running = true;
+      if (my !== session) return my; // มีรอบใหม่เริ่มแทนระหว่างรอโหลด
       avgDetectMs = 0;
       let lastTime = -1;
       let nextAt = 0;
       let counted = 0;
       let countStart = performance.now();
       const loop = () => {
-        if (!running) return;
+        if (my !== session) return;
         const now = performance.now();
         // ประมวลผลเฉพาะเมื่อถึงเวลา มีเฟรมใหม่ และตัวจับมือพร้อม (อาจกำลังสร้างใหม่)
         if (landmarker && now >= nextAt && video.readyState >= 2 && video.currentTime !== lastTime) {
@@ -173,10 +176,12 @@
         frameRequest = requestAnimationFrame(loop);
       };
       loop();
+      return my;
     },
 
-    stop() {
-      running = false;
+    stop(id) {
+      if (id !== undefined && id !== null && id !== session) return;
+      session++;
       cancelAnimationFrame(frameRequest);
     },
   };
