@@ -140,9 +140,16 @@
       let nextAt = 0;
       let counted = 0;
       let countStart = performance.now();
+      let lastPlayTry = 0;
       const loop = () => {
         if (my !== session) return;
         const now = performance.now();
+        // Safari หยุดวิดีโอเองเมื่อมันถูกย้ายในหน้า (Flutter วาดหน้าใหม่) แล้วไม่เล่นต่อ
+        // ภาพจึงค้าง/ดำ: สั่งเล่นต่อเอง ไม่เกินครึ่งวินาทีครั้ง
+        if (video.paused && now - lastPlayTry > 500) {
+          lastPlayTry = now;
+          video.play().catch(() => {});
+        }
         // ประมวลผลเฉพาะเมื่อถึงเวลา มีเฟรมใหม่ และตัวจับมือพร้อม (อาจกำลังสร้างใหม่)
         if (landmarker && now >= nextAt && video.readyState >= 2 && video.currentTime !== lastTime) {
           lastTime = video.currentTime;
