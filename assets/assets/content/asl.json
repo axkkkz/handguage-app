@@ -23,8 +23,8 @@
     {"id":"alphabet","th":"ตัวอักษรนิ้วมือ","en":"Fingerspelling","icon":"alphabet"}
   ],
   "units": [
-    {"id":"basics","th":"พื้นฐาน","en":"Basics","signs":["hello","goodbye","thank_you","please","sorry","yes","no","help","welcome","good","bad"]},
     {"id":"numbers1","th":"ตัวเลข 1–5","en":"Numbers 1–5","signs":["one","two","three","four","five"]},
+    {"id":"basics","th":"พื้นฐาน","en":"Basics","signs":["hello","goodbye","thank_you","please","sorry","yes","no","help","welcome","good","bad"]},
     {"id":"family1","th":"ครอบครัว 1","en":"Family 1","signs":["mother","father","sister","brother","son","daughter","baby","family"]},
     {"id":"people1","th":"ผู้คน 1","en":"People 1","signs":["friend","man","woman","boy","girl","child","person","people"]},
     {"id":"questions","th":"คำถาม","en":"Questions","signs":["what","where","who","why","how","when","which","name"]},
