@@ -20,6 +20,9 @@
   // เฟรมนิ่งต่อเนื่องไม่กี่เฟรม
   const MIN_INTERVAL_MS = 80;
 
+  // โหลดไลบรารี+โมเดล (ราว 8 MB) ไม่เกินนี้ เน็ตมือถือช้าก็ยังทัน
+  const LOAD_TIMEOUT_MS = 45000;
+
   let landmarker = null;
   let loading = null;
   let delegateUsed = "";
@@ -52,7 +55,12 @@
           delegateUsed = "CPU";
         }
         return landmarker;
-      })().catch((e) => {
+      })();
+      // CDN ค้าง (ไม่ตอบแต่ไม่ล้ม): ไม่รอเกิน LOAD_TIMEOUT_MS ให้หน้าจอขึ้นข้อผิดพลาดและกดลองใหม่ได้
+      // (ถ้าโหลดเสร็จทีหลัง landmarker ก็ยังถูกเก็บไว้ใช้รอบถัดไป)
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("hand tracker load timed out")), LOAD_TIMEOUT_MS));
+      loading = Promise.race([loading, timeout]).catch((e) => {
         loading = null; // ให้ลองใหม่ได้ในครั้งถัดไป
         throw e;
       });
@@ -190,6 +198,8 @@
       if (id !== undefined && id !== null && id !== session) return;
       session++;
       cancelAnimationFrame(frameRequest);
+      // หยุดแล้ว: ข้อมูลวินิจฉัยต้องไม่โชว์จำนวนภาพ/วินาทีของรอบเก่าค้างไว้
+      framesPerSecond = 0;
     },
   };
 })();
